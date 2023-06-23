@@ -99,18 +99,6 @@ class triggerBot():
                 time.sleep(0.1)  # Ek bir bekleme süresi ekleyin
                 self.shots_fired = 0
 
-    def aim_assist(self):
-        pmap = self.grab()
-
-        for x in range(0, GRABZONE * 2):
-            for y in range(0, GRABZONE * 2):
-                r, g, b = pmap.getpixel((x, y))
-                if r == 255 and g == 0 and b == 0:  # Düşman rengi kırmızı ise
-                    target_x = int((x + 0.5) * (S_WIDTH / (GRABZONE * 2)))  # Crosshair'in hedeflenecek düşmanın üzerine getirilmesi
-                    target_y = int((y + 0.5) * (S_HEIGHT / (GRABZONE * 2)))  # Crosshair'in hedeflenecek düşmanın üzerine getirilmesi
-                    moveTo(target_x, target_y)
-                    break
-
     def print_banner(self):  # Move the method inside the class
         os.system("cls")
         print(Style.BRIGHT + Fore.RED + "Miarey" + Fore.YELLOW + " FullConcact" + Style.RESET_ALL)
@@ -118,41 +106,51 @@ class triggerBot():
         print("Aktif Trigger Bot:", Fore.YELLOW + TRIGGER_KEY + Style.RESET_ALL)
         print("Pixel Tarama Alanı:", Fore.YELLOW + GRABZONE_KEY_UP + "/" + GRABZONE_KEY_DOWN + Style.RESET_ALL)
         print(Fore.CYAN + "==== Bilgiler =====" + Style.RESET_ALL)
-        print("Düşman Dış Rengi:" + Fore.MAGENTA + " Kırmızı Olmak Zorundadır" + Style.RESET_ALL)
+        print("Düşman Dış Rengi:" + Fore.MAGENTA + " Mor Olmak Zorundadır" + Style.RESET_ALL)
         print("Pixel Alanı:", Fore.CYAN + str(GRABZONE) + "x" + str(GRABZONE) + Style.RESET_ALL)
         print("Aktif:", (Fore.GREEN if self.toggled else Fore.RED) + str(self.toggled) + Style.RESET_ALL)
         print("Tepki Süresi:", Fore.CYAN + str(self.last_reac) + Style.RESET_ALL + " ms (" + str(
             (self.last_reac) / (GRABZONE * GRABZONE)) + "ms/pix)")
-        print("Aim Assist:", (Fore.GREEN if self.mode == 0 else Fore.YELLOW if self.mode == 1 else Fore.RED) + outline[
-            self.mode] + Style.RESET_ALL)
-        print("Shot Fired:", Fore.CYAN + str(self.shots_fired) + Style.RESET_ALL)
 
-    def main(self):
-        while True:
-            if keyboard.is_pressed(TRIGGER_KEY):
-                self.toggle()
-
-            if keyboard.is_pressed(SWITCH_KEY):
-                self.switch()
-
-            if keyboard.is_pressed(GRABZONE_KEY_UP):
-                GRABZONE += 1
-
-            if keyboard.is_pressed(GRABZONE_KEY_DOWN):
-                GRABZONE -= 1
-
-            if self.toggled:
-                if self.mode == 0:
-                    self.scan()
-                elif self.mode == 1:
-                    self.scan()
-                    self.aim_assist()
-                elif self.mode == 2:
-                    self.aim_assist()
-
-            time.sleep(0.01)
+    def move_to_color(self, x, y):
+        screen_width, screen_height = S_WIDTH, S_HEIGHT
+        target_x = (x / GRABZONE) * screen_width
+        target_y = (y / GRABZONE) * screen_height
+        moveTo(target_x, target_y)
 
 
 if __name__ == "__main__":
-    trigger = triggerBot()
-    trigger.main()
+    bot = triggerBot()
+    bot.print_banner()
+    while True:
+
+        if keyboard.is_pressed(SWITCH_KEY):
+            bot.switch()
+            bot.print_banner()
+            while keyboard.is_pressed(SWITCH_KEY):
+                pass
+
+        if keyboard.is_pressed(GRABZONE_KEY_UP):
+            GRABZONE += 5
+            bot.print_banner()
+            winsound.Beep(400, 200)
+            while keyboard.is_pressed(GRABZONE_KEY_UP):
+                pass
+        if keyboard.is_pressed(GRABZONE_KEY_DOWN):
+            GRABZONE -= 5
+            bot.print_banner()
+            winsound.Beep(300, 200)
+            while keyboard.is_pressed(GRABZONE_KEY_DOWN):
+                pass
+        if keyboard.is_pressed(TRIGGER_KEY):
+            bot.toggle()
+            bot.print_banner()
+            if bot.toggled:
+                winsound.Beep(440, 200)
+            else:
+                winsound.Beep(392, 200)
+            while keyboard.is_pressed(TRIGGER_KEY):
+                pass
+
+        if bot.toggled:
+            bot.scan()
