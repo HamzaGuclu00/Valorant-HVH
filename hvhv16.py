@@ -6,16 +6,19 @@ import winsound
 import ctypes
 import os
 from colorama import Fore, Style, init
+import requests
+import json
 
 S_WIDTH, S_HEIGHT = (0, 0)
-PURPLE_R, PURPLE_G, PURPLE_B = (250, 100, 250)
-TOLERANCE = 75
+TARGET_COLORS = [(253, 108, 254), (209, 102, 235), (255, 87, 255), (254, 107, 255), (254, 101, 254)]
+TOLERANCE = 10
 GRABZONE = 5
 TRIGGER_KEY = "alt"
 SWITCH_KEY = "ctrl+tab"
 GRABZONE_KEY_UP = "up"
 GRABZONE_KEY_DOWN = "down"
 PAUSE_KEY = "s"
+DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1121766471039721502/Y-y2_hkvC5G0sNbqre1eiETSteQY38fMPKfCTthvy07Kcl-6Yzl5maoF-qW4JlQJnE9D"
 
 os.system("cls")
 def set_screen_resolution():
@@ -49,7 +52,6 @@ def set_screen_resolution():
     # Kapanış çizgisi
     print(Fore.CYAN + "\n════════════════════════════════════" + Style.RESET_ALL)
 
-
 class FoundEnemy(Exception):
     pass
 
@@ -59,6 +61,7 @@ class TriggerBot:
         self.mode = 1
         self.last_reac = 0
         self.shots_fired = 0
+        self.last_discord_message_id = None
 
     def toggle(self):
         self.toggled = not self.toggled
@@ -80,7 +83,10 @@ class TriggerBot:
             winsound.Beep(200, 200)
 
     def approx(self, r, g, b):
-        return PURPLE_R - TOLERANCE < r < PURPLE_R + TOLERANCE and PURPLE_G - TOLERANCE < g < PURPLE_G + TOLERANCE and PURPLE_B - TOLERANCE < b < PURPLE_B + TOLERANCE
+        for color in TARGET_COLORS:
+            if all(color[i] - TOLERANCE < component < color[i] + TOLERANCE for i, component in enumerate((r, g, b))):
+                return True
+        return False
 
     def grab(self):
         screen = ImageGrab.grab((S_WIDTH // 2 - GRABZONE, S_HEIGHT // 2 - GRABZONE, S_WIDTH // 2 + GRABZONE, S_HEIGHT // 2 + GRABZONE))
@@ -128,89 +134,90 @@ class TriggerBot:
         ctypes.windll.user32.mouse_event(4, 0, 0, 0, 0)
 
     def print_banner(self):
-        os.system("cls")  # Konsolu temizle
+        os.system("cls")
 
-        # Bot adı ve başlık
-        print("╔═══════════════════════╗")
-        print("║    Miarey Project     ║")
-        print("╚═══════════════════════╝")
+        # Ana başlık
+        print(Fore.RED + "Miarey" + Fore.YELLOW + " V1.7" + Style.RESET_ALL)
 
-        # Kontrol bilgilerini yazdır
-        print("   Kontroller:")
-        print("   - Aktifleştir:  ", TRIGGER_KEY)
-        print("   - Mod Değiştir:  ", SWITCH_KEY)
-        print("   - Tarama Alanını Büyüt: ", GRABZONE_KEY_UP)
-        print("   - Tarama Alanını Küçült: ", GRABZONE_KEY_DOWN)
-        print("   - Durdur:       ", PAUSE_KEY)
+        # Kontroller başlığı
+        print(Fore.GREEN + "╔═══════════════════════════════════════════════════════╗")
+        print("║                       Kontroller                       ║")
+        print("╚═══════════════════════════════════════════════════════╝" + Style.RESET_ALL)
 
-        # Bot durumu ve ayarları
-        print("\n   Mevcut Ayarlar:")
-        print("   - Aktif:       ", Fore.GREEN + "Evet" if self.toggled else Fore.RED + "Hayır")
-        print("   - Mod:         ", self.mode)
-        print("   - Son Tepki Süresi:  {} ms ({} ms/piksel)".format(self.last_reac, self.last_reac / (GRABZONE * GRABZONE)))
-        print("   - Atışlar:     ", self.shots_fired)
+        # Aktif Trigger ve modu
+        print("Aktif Trigger:", Fore.YELLOW + ("Kapalı" if not self.toggled else "Açık") + Style.RESET_ALL)
+        if self.mode == 0:
+            print("Mod:", Fore.YELLOW + "Tek Atış" + Style.RESET_ALL)
+        elif self.mode == 1:
+            print("Mod:", Fore.YELLOW + "Seri Atış" + Style.RESET_ALL)
+        elif self.mode == 2:
+            print("Mod:", Fore.YELLOW + "Sürekli Atış" + Style.RESET_ALL)
 
-        # Renk bilgilerini yazdır
-        print("\n   Renk Bilgileri:")
-        print("   - Düşman Rengi:      Mor (RGB: {}, {}, {})".format(PURPLE_R, PURPLE_G, PURPLE_B))
-        print("   - Renk Toleransı:    ±{}".format(TOLERANCE))
+        # Pixel Tarama Alanı
+        print("Pixel Tarama Alanı:", Fore.YELLOW + GRABZONE_KEY_UP + "/" + GRABZONE_KEY_DOWN + Style.RESET_ALL)
 
-        # Tarama alanı bilgilerini yazdır
-        print("\n   Tarama Alanı Bilgileri:")
-        print("   - Mevcut Tarama Alanı:  {}x{}".format(GRABZONE, GRABZONE))
-        print("   - Ekran Çözünürlüğü: {}x{}".format(S_WIDTH, S_HEIGHT))
+        # Bilgiler başlığı
+        print(Fore.CYAN + "╔═══════════════════════════════════════════════════════╗")
+        print("║                       Bilgiler                         ║")
+        print("╚═══════════════════════════════════════════════════════╝" + Style.RESET_ALL)
 
-        # Kapanış çizgisi
-        print("\n════════════════════════")
+        # Tepki süresi
+        print("Tepki Süresi:", Fore.YELLOW + str(self.last_reac) + " ms" + Style.RESET_ALL)
 
-    def move_to_color(self, x, y):
-        target_x = (x / GRABZONE) * S_WIDTH
-        target_y = (y / GRABZONE) * S_HEIGHT
-        moveTo(target_x, target_y)
+        # Ateşlenen mermi sayısı
+        print("Ateşlenen Mermi Sayısı:", Fore.YELLOW + str(self.shots_fired) + Style.RESET_ALL)
+
+    def send_discord_message(self):
+        if DISCORD_WEBHOOK_URL is None or self.last_discord_message_id is not None:
+            return
+
+        payload = {
+            "content": "TriggerBot Aktif!",
+            "username": "TriggerBot",
+            "avatar_url": "https://i.imgur.com/your-avatar.png"
+        }
+
+        response = requests.post(DISCORD_WEBHOOK_URL, json.dumps(payload), headers={"Content-Type": "application/json"})
+
+        try:
+            response_data = response.json()
+            if "id" in response_data:
+                self.last_discord_message_id = response_data["id"]
+                print("[HVH] Log.txt puanlar kaydedildi!")
+            else:
+                print("[HVH] Log.txt puanlar kaydedilirken bir hata oluştu!")
+        except json.decoder.JSONDecodeError:
+            print("[HVH] Log.txt puanlar kaydedilirken bir hata oluştu!")
+
+    def main(self):
+        set_screen_resolution()
+        self.print_banner()
+        self.send_discord_message()
+
+        while True:
+            if keyboard.is_pressed(SWITCH_KEY):
+                self.switch()
+                self.print_banner()
+                time.sleep(0.3)
+
+            if keyboard.is_pressed(TRIGGER_KEY):
+                self.toggle()
+                self.print_banner()
+                time.sleep(0.3)
+
+            if keyboard.is_pressed(GRABZONE_KEY_UP):
+                GRABZONE += 1
+                self.print_banner()
+                time.sleep(0.3)
+
+            if keyboard.is_pressed(GRABZONE_KEY_DOWN):
+                GRABZONE -= 1
+                self.print_banner()
+                time.sleep(0.3)
+
+            if self.toggled:
+                self.scan()
 
 if __name__ == "__main__":
-    init(autoreset=True)
-    set_screen_resolution()
-    
     bot = TriggerBot()
-    bot.print_banner()
-
-    while True:
-        if keyboard.is_pressed(SWITCH_KEY):
-            bot.switch()
-            bot.print_banner()
-
-            while keyboard.is_pressed(SWITCH_KEY):
-                pass
-
-        if keyboard.is_pressed(GRABZONE_KEY_UP):
-            GRABZONE += 5
-            bot.print_banner()
-            winsound.Beep(400, 200)
-
-            while keyboard.is_pressed(GRABZONE_KEY_UP):
-                pass
-
-        if keyboard.is_pressed(GRABZONE_KEY_DOWN):
-            if GRABZONE > 5:
-                GRABZONE -= 5
-                bot.print_banner()
-                winsound.Beep(300, 200)
-
-            while keyboard.is_pressed(GRABZONE_KEY_DOWN):
-                pass
-
-        if keyboard.is_pressed(TRIGGER_KEY):
-            bot.toggle()
-            bot.print_banner()
-
-            if bot.toggled:
-                winsound.Beep(440, 200)
-            else:
-                winsound.Beep(392, 200)
-
-            while keyboard.is_pressed(TRIGGER_KEY):
-                pass
-
-        if bot.toggled:
-            bot.scan()
+    bot.main()
