@@ -106,7 +106,7 @@ class TriggerBot():
 
     def print_banner(self):
         os.system("cls")
-        print(Style.BRIGHT + Fore.RED + "Miarey" + Fore.YELLOW + " V1.5" + Style.RESET_ALL)
+        print(Style.BRIGHT + Fore.RED + "Miarey" + Fore.YELLOW + " V1.6" + Style.RESET_ALL)
         print(Fore.GREEN + "====== Kontroller ======" + Style.RESET_ALL)
         print("Aktif Trigger Bot:", Fore.YELLOW + TRIGGER_KEY + Style.RESET_ALL)
         print("Pixel Tarama Alanı:", Fore.YELLOW + GRABZONE_KEY_UP + "/" + GRABZONE_KEY_DOWN + Style.RESET_ALL)
