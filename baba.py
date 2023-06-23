@@ -27,13 +27,15 @@ class FoundEnemy(Exception):
     pass
 
 
-class triggerBot():
+class TriggerBot():
 
     def __init__(self):
         self.toggled = False
         self.mode = 1
         self.last_reac = 0
         self.shots_fired = 0
+        self.delayed_shots = 0  # Yavaşlatılmış atış sayısını takip etmek için değişken eklendi
+        self.delay_duration = 2  # Yavaşlatma süresi (saniye) değiştirildi
 
     def toggle(self):
         self.toggled = not self.toggled
@@ -59,7 +61,7 @@ class triggerBot():
         while keyboard.is_pressed(PAUSE_KEY):
             pass
         ctypes.windll.user32.mouse_event(2, 0, 0, 0, 0)
-        time.sleep(0.01)
+        time.sleep(0.025)
         ctypes.windll.user32.mouse_event(4, 0, 0, 0, 0)
 
     def approx(self, r, g, b):
@@ -84,27 +86,32 @@ class triggerBot():
                         raise FoundEnemy
 
         except FoundEnemy:
-            self.last_reac = int((time.time() - start_time) * 1000)
-            self.click()
+            self.last_reac = int((time.time() - start_time) * 900)
+            if self.delayed_shots < 3:
+                self.click()
+                self.delayed_shots += 1
+            elif self.delayed_shots == 3:
+                time.sleep(self.delay_duration)
+                self.click()
+                self.delayed_shots = 0
             if self.mode == 1:
                 time.sleep(0.1)
 
             self.print_banner()
 
             self.shots_fired += 1
-
             if self.shots_fired >= 4:
-                time.sleep(1)
+                time.sleep(0.1)
                 self.shots_fired = 0
 
     def print_banner(self):
         os.system("cls")
-        print(Style.BRIGHT + Fore.RED + "Miarey" + Fore.YELLOW + " V1.5" + Style.RESET_ALL)
+        print(Style.BRIGHT + Fore.RED + "Miarey" + Fore.YELLOW + " FullContact" + Style.RESET_ALL)
         print(Fore.GREEN + "====== Kontroller ======" + Style.RESET_ALL)
         print("Aktif Trigger Bot:", Fore.YELLOW + TRIGGER_KEY + Style.RESET_ALL)
         print("Pixel Tarama Alanı:", Fore.YELLOW + GRABZONE_KEY_UP + "/" + GRABZONE_KEY_DOWN + Style.RESET_ALL)
         print(Fore.CYAN + "==== Bilgiler =====" + Style.RESET_ALL)
-        print("Düşman Rengi:" + Fore.YELLOW + " Sarı Olmak Zorundadır" + Style.RESET_ALL)
+        print("Düşman Dış Rengi:" + Fore.YELLOW + " Sarı Olmak Zorundadır" + Style.RESET_ALL)
         print("Pixel Alanı:", Fore.CYAN + str(GRABZONE) + "x" + str(GRABZONE) + Style.RESET_ALL)
         print("Aktif:", (Fore.GREEN if self.toggled else Fore.RED) + str(self.toggled) + Style.RESET_ALL)
         print("Tepki Süresi:", Fore.CYAN + str(self.last_reac) + Style.RESET_ALL + " ms (" + str(
@@ -118,7 +125,7 @@ class triggerBot():
 
 
 if __name__ == "__main__":
-    bot = triggerBot()
+    bot = TriggerBot()
     bot.print_banner()
     while True:
 
