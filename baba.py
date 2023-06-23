@@ -11,15 +11,17 @@ from colorama import Fore, Style, init
 from pyautogui import moveTo
 import numpy as np
 
-S_HEIGHT, S_WIDTH = (1920, 1080)  # Ekran çözünürlüğünü 1920x1080 olarak ayarlayın
-YELLOW_R, YELLOW_G, YELLOW_B = (255, 255, 0)
+S_HEIGHT, S_WIDTH = (1920, 1080)
+ENEMY_R, ENEMY_G, ENEMY_B = (255, 0, 0)  # Düşman rengi kırmızı
+
+PURPLE_R, PURPLE_G, PURPLE_B = (250, 100, 250)
 TOLERANCE = 75
 GRABZONE = 5
 TRIGGER_KEY = "alt"
 SWITCH_KEY = "ctrl + tab"
 GRABZONE_KEY_UP = "up"
 GRABZONE_KEY_DOWN = "down"
-outline = ["Sarı", "Kırmızı", "Mor"]
+outline = ["Mor", "Kırmızı", "Sarı"]
 PAUSE_KEY = "s"
 
 
@@ -34,8 +36,8 @@ class TriggerBot():
         self.mode = 1
         self.last_reac = 0
         self.shots_fired = 0
-        self.delayed_shots = 0  # Yavaşlatılmış atış sayısını takip etmek için değişken eklendi
-        self.delay_duration = 2  # Yavaşlatma süresi (saniye) değiştirildi
+        self.aim_assist = True  # Aim assist özelliği
+        self.assist_delay = 0.1  # Aim assist gecikme süresi
 
     def toggle(self):
         self.toggled = not self.toggled
@@ -65,7 +67,7 @@ class TriggerBot():
         ctypes.windll.user32.mouse_event(4, 0, 0, 0, 0)
 
     def approx(self, r, g, b):
-        return YELLOW_R - TOLERANCE < r < YELLOW_R + TOLERANCE and YELLOW_G - TOLERANCE < g < YELLOW_G + TOLERANCE and YELLOW_B - TOLERANCE < b < YELLOW_B + TOLERANCE
+        return ENEMY_R - TOLERANCE < r < ENEMY_R + TOLERANCE and ENEMY_G - TOLERANCE < g < ENEMY_G + TOLERANCE and ENEMY_B - TOLERANCE < b < ENEMY_B + TOLERANCE
 
     def grab(self):
         with mss.mss() as sct:
@@ -86,36 +88,37 @@ class TriggerBot():
                         raise FoundEnemy
 
         except FoundEnemy:
-            self.last_reac = int((time.time() - start_time) * 900)
-            if self.delayed_shots < 3:
-                self.click()
-                self.delayed_shots += 1
-            elif self.delayed_shots == 3:
-                time.sleep(self.delay_duration)
-                self.click()
-                self.delayed_shots = 0
+            self.last_reac = int((time.time() - start_time) * 1000)
+            self.click()
             if self.mode == 1:
                 time.sleep(0.1)
 
             self.print_banner()
 
             self.shots_fired += 1
+
             if self.shots_fired >= 4:
                 time.sleep(0.1)
                 self.shots_fired = 0
 
+    def aim_assist_fire(self):
+        if self.aim_assist:
+            self.click()
+            time.sleep(self.assist_delay)
+
     def print_banner(self):
         os.system("cls")
-        print(Style.BRIGHT + Fore.RED + "Miarey" + Fore.YELLOW + "V1.6!" + Style.RESET_ALL)
+        print(Style.BRIGHT + Fore.RED + "Miarey" + Fore.YELLOW + " FullConcact" + Style.RESET_ALL)
         print(Fore.GREEN + "====== Kontroller ======" + Style.RESET_ALL)
         print("Aktif Trigger Bot:", Fore.YELLOW + TRIGGER_KEY + Style.RESET_ALL)
         print("Pixel Tarama Alanı:", Fore.YELLOW + GRABZONE_KEY_UP + "/" + GRABZONE_KEY_DOWN + Style.RESET_ALL)
         print(Fore.CYAN + "==== Bilgiler =====" + Style.RESET_ALL)
-        print("Düşman Dış Rengi:" + Fore.YELLOW + " Sarı Olmak Zorundadır" + Style.RESET_ALL)
+        print("Düşman Rengi:" + Fore.RED + " Kırmızı" + Style.RESET_ALL)
         print("Pixel Alanı:", Fore.CYAN + str(GRABZONE) + "x" + str(GRABZONE) + Style.RESET_ALL)
         print("Aktif:", (Fore.GREEN if self.toggled else Fore.RED) + str(self.toggled) + Style.RESET_ALL)
         print("Tepki Süresi:", Fore.CYAN + str(self.last_reac) + Style.RESET_ALL + " ms (" + str(
             (self.last_reac) / (GRABZONE * GRABZONE)) + "ms/pix)")
+        print("Aim Assist:", (Fore.GREEN if self.aim_assist else Fore.RED) + str(self.aim_assist) + Style.RESET_ALL)
 
     def move_to_color(self, x, y):
         screen_width, screen_height = S_WIDTH, S_HEIGHT
@@ -159,3 +162,4 @@ if __name__ == "__main__":
 
         if bot.toggled:
             bot.scan()
+            bot.aim_assist_fire()
