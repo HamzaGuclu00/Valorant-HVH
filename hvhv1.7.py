@@ -21,8 +21,6 @@ PAUSE_KEY = "s"
 DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1121766471039721502/Y-y2_hkvC5G0sNbqre1eiETSteQY38fMPKfCTthvy07Kcl-6Yzl5maoF-qW4JlQJnE9D"
 
 os.system("cls")
-init(autoreset=True)
-
 def set_screen_resolution():
     global S_WIDTH, S_HEIGHT
     screen_resolutions = {
@@ -32,27 +30,30 @@ def set_screen_resolution():
         "1366x768": (1366, 768)
     }
 
+    # Başlık ve açıklama
     print(Fore.CYAN + "╔════════════════════════════════════╗")
-    print("║        Set Screen Resolution        ║")
+    print("║    Ekran Çözünürlüğünü Ayarla    ║")
     print("╚════════════════════════════════════╝")
-    print(Style.RESET_ALL + "Please select one of the following resolutions:")
+    print(Style.RESET_ALL + "Lütfen aşağıdaki çözünürlüklerden birini seçin:")
 
+    # Seçenekleri listele
     for i, resolution in enumerate(screen_resolutions.keys()):
         print(f"   {i+1}. {resolution}")
 
-    selected_option = input("   Select your option (1-4): ")
+    # Seçim yapılmasını iste
+    selected_option = input("   Seçiminizi yapın (1-4): ")
     selected_resolution = list(screen_resolutions.values())[int(selected_option) - 1]
     S_WIDTH, S_HEIGHT = selected_resolution
 
-    print("\n   Selected resolution: {}x{}".format(S_WIDTH, S_HEIGHT))
-    print("   Screen resolution set successfully.")
+    # Onay mesajı
+    print("\n   Seçilen çözünürlük: {}x{}".format(S_WIDTH, S_HEIGHT))
+    print("   Ekran çözünürlüğü başarıyla ayarlandı.")
 
+    # Kapanış çizgisi
     print(Fore.CYAN + "\n════════════════════════════════════" + Style.RESET_ALL)
-
 
 class FoundEnemy(Exception):
     pass
-
 
 class TriggerBot:
     def __init__(self):
@@ -135,106 +136,88 @@ class TriggerBot:
     def print_banner(self):
         os.system("cls")
 
+        # Ana başlık
         print(Fore.RED + "Miarey" + Fore.YELLOW + " V1.7" + Style.RESET_ALL)
 
+        # Kontroller başlığı
         print(Fore.GREEN + "╔═══════════════════════════════════════════════════════╗")
-        print("║                     Controls                          ║")
+        print("║                       Kontroller                       ║")
         print("╚═══════════════════════════════════════════════════════╝" + Style.RESET_ALL)
 
-        print("Trigger: ", end="")
-        if not self.toggled:
-            print(Fore.RED + "OFF" + Style.RESET_ALL)
-        else:
-            print(Fore.GREEN + "ON" + Style.RESET_ALL)
-
-        print("Mode: ", end="")
+        # Aktif Trigger ve modu
+        print("Aktif Trigger:", Fore.YELLOW + ("Kapalı" if not self.toggled else "Açık") + Style.RESET_ALL)
         if self.mode == 0:
-            print(Fore.YELLOW + "Single Shot" + Style.RESET_ALL)
+            print("Mod:", Fore.YELLOW + "Tek Atış" + Style.RESET_ALL)
         elif self.mode == 1:
-            print(Fore.YELLOW + "Burst Mode" + Style.RESET_ALL)
+            print("Mod:", Fore.YELLOW + "Seri Atış" + Style.RESET_ALL)
         elif self.mode == 2:
-            print(Fore.YELLOW + "Continuous Fire" + Style.RESET_ALL)
+            print("Mod:", Fore.YELLOW + "Sürekli Atış" + Style.RESET_ALL)
 
-        print("Pixel Scan Area: ", end="")
-        print(Fore.YELLOW + f"{GRABZONE}x{GRABZONE}" + Style.RESET_ALL)
+        # Pixel Tarama Alanı
+        print("Pixel Tarama Alanı:", Fore.YELLOW + GRABZONE_KEY_UP + "/" + GRABZONE_KEY_DOWN + Style.RESET_ALL)
 
+        # Bilgiler başlığı
         print(Fore.CYAN + "╔═══════════════════════════════════════════════════════╗")
-        print("║                     Information                       ║")
+        print("║                       Bilgiler                         ║")
         print("╚═══════════════════════════════════════════════════════╝" + Style.RESET_ALL)
 
-        print("Reaction Time: ", end="")
-        if self.last_reac == 0:
-            print(Fore.YELLOW + "N/A" + Style.RESET_ALL)
-        else:
-            print(Fore.YELLOW + f"{self.last_reac} ms" + Style.RESET_ALL)
+        # Tepki süresi
+        print("Tepki Süresi:", Fore.YELLOW + str(self.last_reac) + " ms" + Style.RESET_ALL)
 
-        print("Shots Fired: ", end="")
-        print(Fore.YELLOW + str(self.shots_fired) + Style.RESET_ALL)
+        # Ateşlenen mermi sayısı
+        print("Ateşlenen Mermi Sayısı:", Fore.YELLOW + str(self.shots_fired) + Style.RESET_ALL)
 
-        print("")
+    def send_discord_message(self):
+        if DISCORD_WEBHOOK_URL is None or self.last_discord_message_id is not None:
+            return
 
-        if self.last_discord_message_id is not None:
-            try:
-                response = requests.get(DISCORD_WEBHOOK_URL)
-                messages = json.loads(response.text)
-                for message in messages:
-                    if message["id"] == self.last_discord_message_id:
-                        print(Fore.GREEN + "Discord Message Sent Successfully" + Style.RESET_ALL)
-                        print(Fore.YELLOW + "Message Content: " + Style.RESET_ALL + message["content"])
-                        break
-            except:
-                print(Fore.RED + "Error Retrieving Discord Message" + Style.RESET_ALL)
-
-    def discord_alert(self):
-        message = {
-            "content": f"Miarey TriggerBot has fired a shot! Last reaction time: {self.last_reac} ms",
-            "username": "Miarey TriggerBot",
-            "avatar_url": "https://example.com/avatar.png"
+        payload = {
+            "content": "TriggerBot Aktif!",
+            "username": "TriggerBot",
+            "avatar_url": "https://i.imgur.com/your-avatar.png"
         }
 
-        headers = {
-            "Content-Type": "application/json"
-        }
+        response = requests.post(DISCORD_WEBHOOK_URL, json.dumps(payload), headers={"Content-Type": "application/json"})
 
-        response = requests.post(DISCORD_WEBHOOK_URL, data=json.dumps(message), headers=headers)
+        try:
+            response_data = response.json()
+            if "id" in response_data:
+                self.last_discord_message_id = response_data["id"]
+                print("[HVH] Log.txt puanlar kaydedildi!")
+            else:
+                print("[HVH] Log.txt puanlar kaydedilirken bir hata oluştu!")
+        except json.decoder.JSONDecodeError:
+            print("[HVH] Log.txt puanlar kaydedilirken bir hata oluştu!")
 
-        if response.status_code == 200:
-            response_data = json.loads(response.text)
-            self.last_discord_message_id = response_data["id"]
-        else:
-            print(Fore.RED + "Error sending Discord message" + Style.RESET_ALL)
+    def main(self):
+        set_screen_resolution()
+        self.print_banner()
+        self.send_discord_message()
 
+        while True:
+            if keyboard.is_pressed(SWITCH_KEY):
+                self.switch()
+                self.print_banner()
+                time.sleep(0.3)
 
-def main():
-    set_screen_resolution()
-    bot = TriggerBot()
+            if keyboard.is_pressed(TRIGGER_KEY):
+                self.toggle()
+                self.print_banner()
+                time.sleep(0.3)
 
-    while True:
-        if keyboard.is_pressed(TRIGGER_KEY):
-            bot.toggle()
-            time.sleep(0.2)
-
-        if keyboard.is_pressed(SWITCH_KEY):
-            bot.switch()
-            time.sleep(0.2)
-
-        if keyboard.is_pressed(GRABZONE_KEY_UP):
-            global GRABZONE
-            if GRABZONE < 10:
+            if keyboard.is_pressed(GRABZONE_KEY_UP):
                 GRABZONE += 1
-                time.sleep(0.2)
+                self.print_banner()
+                time.sleep(0.3)
 
-        if keyboard.is_pressed(GRABZONE_KEY_DOWN):
-            if GRABZONE > 1:
+            if keyboard.is_pressed(GRABZONE_KEY_DOWN):
                 GRABZONE -= 1
-                time.sleep(0.2)
+                self.print_banner()
+                time.sleep(0.3)
 
-        if bot.toggled:
-            bot.scan()
-
-        if bot.shots_fired > 0:
-            bot.discord_alert()
-
+            if self.toggled:
+                self.scan()
 
 if __name__ == "__main__":
-    main()
+    bot = TriggerBot()
+    bot.main()
