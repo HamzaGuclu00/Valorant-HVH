@@ -84,10 +84,10 @@ class triggerBot():
                         raise FoundEnemy
 
         except FoundEnemy:
-            self.last_reac = int((time.time() - start_time) * 825)
+            self.last_reac = int((time.time() - start_time) * 900)
             self.click()
             if self.mode == 1:
-                time.sleep(0.0)
+                time.sleep(0.1)
 
             self.print_banner()  # Call the method using 'self'
 
@@ -101,7 +101,7 @@ class triggerBot():
 
     def print_banner(self):  # Move the method inside the class
         os.system("cls")
-        print(Style.BRIGHT + Fore.RED + "brandnew" + Fore.YELLOW + " TriggerBot" + Style.RESET_ALL)
+        print(Style.BRIGHT + Fore.RED + "Miarey" + Fore.YELLOW + " FullConcact" + Style.RESET_ALL)
         print(Fore.GREEN + "====== Kontroller ======" + Style.RESET_ALL)
         print("Aktif Trigger Bot:", Fore.YELLOW + TRIGGER_KEY + Style.RESET_ALL)
         print("Pixel Tarama Alanı:", Fore.YELLOW + GRABZONE_KEY_UP + "/" + GRABZONE_KEY_DOWN + Style.RESET_ALL)
