@@ -10,9 +10,9 @@ import requests
 import json
 
 S_WIDTH, S_HEIGHT = (0, 0)
-TARGET_COLORS = [(253, 108, 254), (209, 102, 235), (255, 87, 255), (254, 107, 255), (254, 101, 254)]
-TOLERANCE = 10
-GRABZONE = 5
+TARGET_COLORS = [(253, 108, 254), (209, 102, 235), (255, 87, 255), (254, 107, 255), (254, 101, 254), (255, 144, 255)]
+TOLERANCE = 13
+GRABZONE = 4
 TRIGGER_KEY = "alt"
 SWITCH_KEY = "ctrl+tab"
 GRABZONE_KEY_UP = "up"
