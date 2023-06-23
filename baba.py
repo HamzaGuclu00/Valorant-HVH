@@ -12,14 +12,14 @@ from pyautogui import moveTo
 import numpy as np
 
 S_HEIGHT, S_WIDTH = (1920, 1080)  # Ekran çözünürlüğünü 1920x1080 olarak ayarlayın
-PURPLE_R, PURPLE_G, PURPLE_B = (250, 100, 250)
+YELLOW_R, YELLOW_G, YELLOW_B = (255, 255, 0)
 TOLERANCE = 75
 GRABZONE = 5
 TRIGGER_KEY = "alt"
 SWITCH_KEY = "ctrl + tab"
 GRABZONE_KEY_UP = "up"
 GRABZONE_KEY_DOWN = "down"
-outline = ["Mor", "Kırmızı", "Sarı"]
+outline = ["Sarı", "Kırmızı", "Mor"]
 PAUSE_KEY = "s"
 
 
@@ -33,7 +33,7 @@ class triggerBot():
         self.toggled = False
         self.mode = 1
         self.last_reac = 0
-        self.shots_fired = 0  # Ateş edilen mermi sayısını takip etmek için bir değişken ekleyin
+        self.shots_fired = 0
 
     def toggle(self):
         self.toggled = not self.toggled
@@ -54,16 +54,16 @@ class triggerBot():
             winsound.Beep(200, 200)
 
     def click(self):
-        if keyboard.is_pressed(PAUSE_KEY) or keyboard.is_pressed(PAUSE_KEY) or keyboard.is_pressed(PAUSE_KEY) or keyboard.is_pressed(PAUSE_KEY):
+        if keyboard.is_pressed(PAUSE_KEY):
             return
-        while keyboard.is_pressed(PAUSE_KEY) or keyboard.is_pressed(PAUSE_KEY) or keyboard.is_pressed(PAUSE_KEY) or keyboard.is_pressed(PAUSE_KEY):
+        while keyboard.is_pressed(PAUSE_KEY):
             pass
         ctypes.windll.user32.mouse_event(2, 0, 0, 0, 0)
-        time.sleep(0.025)  # Mouse tıklamasından sonra bekleme süresini düşürün
+        time.sleep(0.01)
         ctypes.windll.user32.mouse_event(4, 0, 0, 0, 0)
 
     def approx(self, r, g, b):
-        return PURPLE_R - TOLERANCE < r < PURPLE_R + TOLERANCE and PURPLE_G - TOLERANCE < g < PURPLE_G + TOLERANCE and PURPLE_B - TOLERANCE < b < PURPLE_B + TOLERANCE
+        return YELLOW_R - TOLERANCE < r < YELLOW_R + TOLERANCE and YELLOW_G - TOLERANCE < g < YELLOW_G + TOLERANCE and YELLOW_B - TOLERANCE < b < YELLOW_B + TOLERANCE
 
     def grab(self):
         with mss.mss() as sct:
@@ -84,29 +84,27 @@ class triggerBot():
                         raise FoundEnemy
 
         except FoundEnemy:
-            self.last_reac = int((time.time() - start_time) * 900)
+            self.last_reac = int((time.time() - start_time) * 1000)
             self.click()
             if self.mode == 1:
                 time.sleep(0.1)
 
-            self.print_banner()  # Call the method using 'self'
+            self.print_banner()
 
-            # Ateş edilen mermi sayısını artırın
             self.shots_fired += 1
 
-            # Mermi sayısı kontrolü yapın
-            if self.shots_fired >= 4:  # 4 veya 5 yerine 4 olarak değiştirin
-                time.sleep(0.1)  # Ek bir bekleme süresi ekleyin
+            if self.shots_fired >= 4:
+                time.sleep(1)
                 self.shots_fired = 0
 
-    def print_banner(self):  # Move the method inside the class
+    def print_banner(self):
         os.system("cls")
-        print(Style.BRIGHT + Fore.RED + "Miarey" + Fore.YELLOW + " FullConcact" + Style.RESET_ALL)
+        print(Style.BRIGHT + Fore.RED + "Miarey" + Fore.YELLOW + " V1.5" + Style.RESET_ALL)
         print(Fore.GREEN + "====== Kontroller ======" + Style.RESET_ALL)
         print("Aktif Trigger Bot:", Fore.YELLOW + TRIGGER_KEY + Style.RESET_ALL)
         print("Pixel Tarama Alanı:", Fore.YELLOW + GRABZONE_KEY_UP + "/" + GRABZONE_KEY_DOWN + Style.RESET_ALL)
         print(Fore.CYAN + "==== Bilgiler =====" + Style.RESET_ALL)
-        print("Düşman Dış Rengi:" + Fore.MAGENTA + " Mor Olmak Zorundadır" + Style.RESET_ALL)
+        print("Düşman Rengi:" + Fore.YELLOW + " Sarı Olmak Zorundadır" + Style.RESET_ALL)
         print("Pixel Alanı:", Fore.CYAN + str(GRABZONE) + "x" + str(GRABZONE) + Style.RESET_ALL)
         print("Aktif:", (Fore.GREEN if self.toggled else Fore.RED) + str(self.toggled) + Style.RESET_ALL)
         print("Tepki Süresi:", Fore.CYAN + str(self.last_reac) + Style.RESET_ALL + " ms (" + str(
