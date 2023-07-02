@@ -1,67 +1,37 @@
-from PIL import ImageGrab
-from pyautogui import click, moveTo
-import time
+from ast import Return
 import keyboard
-import winsound
+import time
 import ctypes
+import PIL.ImageGrab
+import PIL.Image
+import winsound
 import os
+import mss
 from colorama import Fore, Style, init
-import requests
-import json
 
-S_WIDTH, S_HEIGHT = (0, 0)
-TARGET_COLORS = [(253, 108, 254), (209, 102, 235), (255, 87, 255), (254, 107, 255), (254, 101, 254), (255, 144, 255)]
-TOLERANCE = 13
-GRABZONE = 4
-TRIGGER_KEY = "insert"
-SWITCH_KEY = "ctrl+tab"
+S_HEIGHT, S_WIDTH = (PIL.ImageGrab.grab().size)
+PURPLE_R, PURPLE_G, PURPLE_B = (250, 100, 250)
+TOLERANCE = 75
+GRABZONE = 5
+TRIGGER_KEY = "alt"
+SWITCH_KEY = "ctrl + tab"
 GRABZONE_KEY_UP = "up"
 GRABZONE_KEY_DOWN = "down"
-PAUSE_KEY = "s"
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1121766471039721502/Y-y2_hkvC5G0sNbqre1eiETSteQY38fMPKfCTthvy07Kcl-6Yzl5maoF-qW4JlQJnE9D"
+outline = ["Mor","Kirmizi","Sari"]
+PAUSE_KEY = "a"
+PAUSE_KEY = "d"
 
-os.system("cls")
-def set_screen_resolution():
-    global S_WIDTH, S_HEIGHT
-    screen_resolutions = {
-        "1920x1080": (1920, 1080),
-        "1680x1050": (1680, 1050),
-        "1440x900": (1440, 900),
-        "1366x768": (1366, 768)
-    }
-
-    # Başlık ve açıklama
-    print(Fore.CYAN + "╔════════════════════════════════════╗")
-    print("║    Ekran Çözünürlüğünü Ayarla    ║")
-    print("╚════════════════════════════════════╝")
-    print(Style.RESET_ALL + "Lütfen aşağıdaki çözünürlüklerden birini seçin:")
-
-    # Seçenekleri listele
-    for i, resolution in enumerate(screen_resolutions.keys()):
-        print(f"   {i+1}. {resolution}")
-
-    # Seçim yapılmasını iste
-    selected_option = input("   Seçiminizi yapın (1-4): ")
-    selected_resolution = list(screen_resolutions.values())[int(selected_option) - 1]
-    S_WIDTH, S_HEIGHT = selected_resolution
-
-    # Onay mesajı
-    print("\n   Seçilen çözünürlük: {}x{}".format(S_WIDTH, S_HEIGHT))
-    print("   Ekran çözünürlüğü başarıyla ayarlandı.")
-
-    # Kapanış çizgisi
-    print(Fore.CYAN + "\n════════════════════════════════════" + Style.RESET_ALL)
 
 class FoundEnemy(Exception):
     pass
 
-class TriggerBot:
+
+class triggerBot():
+   
     def __init__(self):
         self.toggled = False
         self.mode = 1
         self.last_reac = 0
-        self.shots_fired = 0
-        self.last_discord_message_id = None
 
     def toggle(self):
         self.toggled = not self.toggled
@@ -71,153 +41,103 @@ class TriggerBot:
             self.mode += 1
         else:
             self.mode = 0
-
         if self.mode == 0:
             winsound.Beep(200, 200)
-        elif self.mode == 1:
+        if self.mode == 1:
             winsound.Beep(200, 200)
             winsound.Beep(200, 200)
-        elif self.mode == 2:
+        if self.mode == 2:
             winsound.Beep(200, 200)
             winsound.Beep(200, 200)
             winsound.Beep(200, 200)
-
-    def approx(self, r, g, b):
-        for color in TARGET_COLORS:
-            if all(color[i] - TOLERANCE < component < color[i] + TOLERANCE for i, component in enumerate((r, g, b))):
-                return True
-        return False
-
-    def grab(self):
-        screen = ImageGrab.grab((S_WIDTH // 2 - GRABZONE, S_HEIGHT // 2 - GRABZONE, S_WIDTH // 2 + GRABZONE, S_HEIGHT // 2 + GRABZONE))
-        return screen
-
-    def scan(self):
-        start_time = time.time()
-        pmap = self.grab()
-
-        try:
-            for x in range(GRABZONE * 2):
-                for y in range(GRABZONE * 2):
-                    r, g, b = pmap.getpixel((x, y))
-                    if self.approx(r, g, b):
-                        raise FoundEnemy
-
-        except FoundEnemy:
-            self.last_reac = int((time.time() - start_time) * 1000)
-            self.click()
-
-            if self.mode == 1:
-                time.sleep(0.01)
-            elif self.mode == 2:
-                time.sleep(0.005)
-
-            self.print_banner()
-
-            self.shots_fired += 1
-
-            if self.shots_fired >= 8:
-                time.sleep(0.5)
-                self.shots_fired = 0
-            elif self.shots_fired >= 4:
-                time.sleep(0.1)
 
     def click(self):
-        if keyboard.is_pressed(PAUSE_KEY):
+        if keyboard.is_pressed(PAUSE_KEY) or keyboard.is_pressed(PAUSE_KEY) or keyboard.is_pressed(PAUSE_KEY) or keyboard.is_pressed(PAUSE_KEY):
             return
-
-        while keyboard.is_pressed(PAUSE_KEY):
+        while keyboard.is_pressed(PAUSE_KEY) or keyboard.is_pressed(PAUSE_KEY) or keyboard.is_pressed(PAUSE_KEY) or keyboard.is_pressed(PAUSE_KEY):
             pass
+        ctypes.windll.user32.mouse_event(2, 0, 0, 0,0)
+        time.sleep(0.25)
+        ctypes.windll.user32.mouse_event(4, 0, 0, 0,0)
 
-        ctypes.windll.user32.mouse_event(2, 0, 0, 0, 0)
-        time.sleep(0.01)
-        ctypes.windll.user32.mouse_event(4, 0, 0, 0, 0)
+    def approx(self, r, g ,b):
+        return PURPLE_R - TOLERANCE < r < PURPLE_R + TOLERANCE and PURPLE_G - TOLERANCE < g < PURPLE_G + TOLERANCE and PURPLE_B - TOLERANCE < b < PURPLE_B + TOLERANCE
 
-    def print_banner(self):
-        os.system("cls")
+    def grab(self):
+        with mss.mss() as sct:
+            bbox=(int(S_HEIGHT/2-GRABZONE), int(S_WIDTH/2-GRABZONE), int(S_HEIGHT/2+GRABZONE), int(S_WIDTH/2+GRABZONE))
+            sct_img = sct.grab(bbox)
+            return PIL.Image.frombytes('RGB', sct_img.size, sct_img.bgra, 'raw', 'BGRX')
 
-        # Ana başlık
-        print(Fore.RED + "Miarey" + Fore.YELLOW + " V1.7" + Style.RESET_ALL)
-
-        # Kontroller başlığı
-        print(Fore.GREEN + "╔═══════════════════════════════════════════════════════╗")
-        print("║                       Kontroller                       ║")
-        print("╚═══════════════════════════════════════════════════════╝" + Style.RESET_ALL)
-
-        # Aktif Trigger ve modu
-        print("Aktif Trigger:", Fore.YELLOW + ("Kapalı" if not self.toggled else "Açık") + Style.RESET_ALL)
-        if self.mode == 0:
-            print("Mod:", Fore.YELLOW + "Tek Atış" + Style.RESET_ALL)
-        elif self.mode == 1:
-            print("Mod:", Fore.YELLOW + "Seri Atış" + Style.RESET_ALL)
-        elif self.mode == 2:
-            print("Mod:", Fore.YELLOW + "Sürekli Atış" + Style.RESET_ALL)
-
-        # Pixel Tarama Alanı
-        print("Pixel Tarama Alanı:", Fore.YELLOW + GRABZONE_KEY_UP + "/" + GRABZONE_KEY_DOWN + Style.RESET_ALL)
-
-        # Bilgiler başlığı
-        print(Fore.CYAN + "╔═══════════════════════════════════════════════════════╗")
-        print("║                       Bilgiler                         ║")
-        print("╚═══════════════════════════════════════════════════════╝" + Style.RESET_ALL)
-
-        # Tepki süresi
-        print("Tepki Süresi:", Fore.YELLOW + str(self.last_reac) + " ms" + Style.RESET_ALL)
-
-        # Ateşlenen mermi sayısı
-        print("Ateşlenen Mermi Sayısı:", Fore.YELLOW + str(self.shots_fired) + Style.RESET_ALL)
-
-    def send_discord_message(self):
-        if DISCORD_WEBHOOK_URL is None or self.last_discord_message_id is not None:
-            return
-
-        payload = {
-            "content": "TriggerBot Aktif!",
-            "username": "TriggerBot",
-            "avatar_url": "https://i.imgur.com/your-avatar.png"
-        }
-
-        response = requests.post(DISCORD_WEBHOOK_URL, json.dumps(payload), headers={"Content-Type": "application/json"})
-
+    def scan(self):
+        is_previous_color = False
+        start_time = time.time()
+        pmap = self.grab()
+       
         try:
-            response_data = response.json()
-            if "id" in response_data:
-                self.last_discord_message_id = response_data["id"]
-                print("[HVH] Log.txt puanlar kaydedildi!")
-            else:
-                print("[HVH] Log.txt puanlar kaydedilirken bir hata oluştu!")
-        except json.decoder.JSONDecodeError:
-            print("[HVH] Log.txt puanlar kaydedilirken bir hata oluştu!")
+            for x in range(0, GRABZONE*2):
+                for y in range(0, GRABZONE*2):
+                    r, g, b = pmap.getpixel((x,y))
+                    if self.approx(r, g, b):
+                        if not is_previous_color:
+                            raise FoundEnemy
+                        is_previous_color = True
+                    else:
+                        is_previous_color = False
+                   
+        except FoundEnemy:
+            self.last_reac = int((time.time() - start_time)*1000)
+            self.click()
+            if self.mode == 1:
+                time.sleep(0.125)
+           
+            print_banner(self)
 
-    def main(self):
-        set_screen_resolution()
-        self.print_banner()
-        self.send_discord_message()
-
-        while True:
-            if keyboard.is_pressed(SWITCH_KEY):
-                self.switch()
-                self.print_banner()
-                time.sleep(0.3)
-
-            if keyboard.is_pressed(TRIGGER_KEY):
-                self.toggle()
-                self.print_banner()
-                time.sleep(0.3)
-
-            if keyboard.is_pressed(GRABZONE_KEY_UP):
-                GRABZONE += 1
-                self.print_banner()
-                time.sleep(0.3)
-
-            if keyboard.is_pressed(GRABZONE_KEY_DOWN):
-                GRABZONE -= 1
-                self.print_banner()
-                time.sleep(0.3)
-
-            if self.toggled:
-                self.scan()
+def print_banner(bot: triggerBot):
+    os.system("cls")
+    print(Style.BRIGHT + Fore.RED + "brandnew" + Fore.YELLOW + " TriggerBot" + Style.RESET_ALL)
+    print(Fore.GREEN + "====== Kontroller ======" + Style.RESET_ALL)
+    print("Aktif Trigger Bot:", Fore.YELLOW + TRIGGER_KEY + Style.RESET_ALL)
+    print("Pixel Tarama Alani:", Fore.YELLOW + GRABZONE_KEY_UP + "/" + GRABZONE_KEY_DOWN + Style.RESET_ALL)
+    print(Fore.CYAN + "==== Bilgiler =====" + Style.RESET_ALL)
+    print("Düsman Dis Rengi:" + Fore.MAGENTA+ " Mor Olmak Zorundadir" +Style.RESET_ALL)
+    print("Pixel Alani:", Fore.CYAN + str(GRABZONE) + "x" + str(GRABZONE) + Style.RESET_ALL)
+    print("Aktif:", (Fore.GREEN if bot.toggled else Fore.RED) + str(bot.toggled) + Style.RESET_ALL)
+    print("Tepki Süresi:", Fore.CYAN + str(bot.last_reac) + Style.RESET_ALL + " ms ("+str((bot.last_reac)/(GRABZONE*GRABZONE))+"ms/pix)")
 
 if __name__ == "__main__":
-    bot = TriggerBot()
-    bot.main()
+    bot = triggerBot()
+    print_banner(bot)
+    while True:
+        if keyboard.is_pressed(SWITCH_KEY):
+            bot.switch()
+            print_banner(bot)
+            while keyboard.is_pressed(SWITCH_KEY):
+                pass
+
+        if keyboard.is_pressed(GRABZONE_KEY_UP):
+            GRABZONE += 5
+            print_banner(bot)
+            winsound.Beep(400, 200)
+            while keyboard.is_pressed(GRABZONE_KEY_UP):
+                pass
+        if keyboard.is_pressed(GRABZONE_KEY_DOWN):
+            GRABZONE -= 5
+            print_banner(bot)
+            winsound.Beep(300, 200)
+            while keyboard.is_pressed(GRABZONE_KEY_DOWN):
+                pass
+        if keyboard.is_pressed(TRIGGER_KEY):
+            bot.toggle()
+            print_banner(bot)
+            if bot.toggled:
+                winsound.Beep(440, 75)
+                winsound.Beep(700, 100)
+            else:
+                winsound.Beep(440, 75)
+                winsound.Beep(200, 100)
+            while keyboard.is_pressed(TRIGGER_KEY):
+                pass
+   
+        if bot.toggled:
+            bot.scan()
